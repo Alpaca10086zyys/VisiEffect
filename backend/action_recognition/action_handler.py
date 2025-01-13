@@ -1,4 +1,6 @@
 import cv2
+import json
+from pathlib import Path
 from .face_recognizer import FaceRecognizer
 from .hand_recognizer import HandRecognizer
 from .pose_recognizer import PoseRecognizer
@@ -8,6 +10,12 @@ class ActionHandler:
         self.face_recognizer = FaceRecognizer()
         self.hand_recognizer = HandRecognizer()
         self.pose_recognizer = PoseRecognizer()
+        self.sticker_paths = self.load_sticker_paths()
+
+    def load_sticker_paths(self):
+        # 读取贴纸路径
+        with open(Path(__file__).resolve().parent / 'path.json', 'r',encoding="utf-8") as f:
+            return json.load(f)
 
     def process_frame(self, frame):
         # 按优先级调用不同的识别器
@@ -25,21 +33,50 @@ class ActionHandler:
 
         return None, None
 
-    def draw_result(self, frame, action, coordinates):
-        # 根据识别结果画出图像（简单绘制矩形或标记）
-        if action == 'face' and coordinates:
-            x, y, w, h = int(coordinates.xmin * frame.shape[1]), int(coordinates.ymin * frame.shape[0]), \
-                         int(coordinates.width * frame.shape[1]), int(coordinates.height * frame.shape[0])
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+    def draw_sticker(self, frame, action, coordinates, scale=1.0, offset_y=0):
+        """根据 action 和坐标绘制贴纸"""
+        if action not in self.sticker_paths:
+            return frame
 
-        elif action == 'hand' and coordinates:
-            for landmark in coordinates.landmark:
-                x, y = int(landmark.x * frame.shape[1]), int(landmark.y * frame.shape[0])
-                cv2.circle(frame, (x, y), 5, (0, 0, 255), -1)
+        sticker_path = self.sticker_paths[action]
+        sticker = cv2.imread(sticker_path, cv2.IMREAD_UNCHANGED)  # 读取带透明通道的图片
+        if sticker is None:
+            return frame
 
-        elif action == 'pose' and coordinates:
-            for landmark in coordinates.landmarks:
-                x, y = int(landmark.x * frame.shape[1]), int(landmark.y * frame.shape[0])
-                cv2.circle(frame, (x, y), 5, (255, 0, 0), -1)
+        # 缩放贴纸
+        sticker = cv2.resize(sticker, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+        h, w, _ = sticker.shape
+
+        x = int(coordinates[0] * frame.shape[1])  # 宽度方向
+        y = int(coordinates[1] * frame.shape[0])  # 高度方向
+        w_box = int(coordinates[2] * frame.shape[1])  # 宽度
+        h_box = int(coordinates[3] * frame.shape[0])  # 高度
+        # 获取坐标中心
+        # x, y, w_box, h_box = (
+        #     int(coordinates.xmin * frame.shape[1]),
+        #     int(coordinates.ymin * frame.shape[0]),
+        #     int(coordinates.width * frame.shape[1]),
+        #     int(coordinates.height * frame.shape[0]),
+        # )
+        center_x, center_y = x + w_box // 2, y + h_box // 2 + offset_y
+
+        # 计算贴纸左上角坐标
+        x1, y1 = center_x - w // 2, center_y - h // 2
+        x2, y2 = x1 + w, y1 + h
+
+        # 确保贴纸不超出帧范围
+        x1, x2 = max(0, x1), min(frame.shape[1], x2)
+        y1, y2 = max(0, y1), min(frame.shape[0], y2)
+
+        # 叠加贴纸
+        sticker_h, sticker_w = y2 - y1, x2 - x1
+        sticker_resized = cv2.resize(sticker, (sticker_w, sticker_h), interpolation=cv2.INTER_AREA)
+        alpha_s = sticker_resized[:, :, 3] / 255.0
+        alpha_l = 1.0 - alpha_s
+
+        for c in range(3):  # 仅处理 BGR 通道
+            frame[y1:y2, x1:x2, c] = (
+                alpha_s * sticker_resized[:, :, c] + alpha_l * frame[y1:y2, x1:x2, c]
+            )
 
         return frame
