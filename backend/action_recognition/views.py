@@ -22,7 +22,8 @@ def start_camera(request):
             # 每隔 20 帧处理一次识别
             if frame_count % 20 == 0:
                 action, coordinates = action_handler.process_frame(frame)
-                action = "clap"
+                if action is  None or coordinates is  None:
+                    continue
                 if action and len(coordinates)==4:
                     print(f"Action: {action}, Coordinates: {coordinates}")
                     # 动态效果：从小到大并向上移动
