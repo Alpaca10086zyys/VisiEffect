@@ -4,15 +4,23 @@ from django.http import JsonResponse
 from .action_handler import ActionHandler
 from django.views.decorators.csrf import csrf_exempt
 
+# 全局变量控制摄像头状态
+camera_active = False
+
 
 @csrf_exempt
 def start_camera(request):
+    global camera_active
     if request.method == 'POST':
+        if camera_active:
+            return JsonResponse({"status": "camera already running"})
+
+        camera_active = True
         cap = cv2.VideoCapture(0)
         action_handler = ActionHandler()
         frame_count = 0  # 帧计数器
 
-        while True:
+        while camera_active:  # 使用全局变量控制循环
             ret, frame = cap.read()
             if not ret:
                 break
@@ -22,10 +30,8 @@ def start_camera(request):
             # 每隔 20 帧处理一次识别
             if frame_count % 20 == 0:
                 action, coordinates = action_handler.process_frame(frame)
-                action = "clap"
-                if action and len(coordinates)==4:
+                if action and len(coordinates) == 4:
                     print(f"Action: {action}, Coordinates: {coordinates}")
-                    # 动态效果：从小到大并向上移动
                     for scale in range(5, 16):  # 缩放比例从 0.5 到 1.5
                         scale_factor = scale / 10.0
                         offset_y = -int(20 * (scale - 5))  # 位移效果
@@ -46,5 +52,21 @@ def start_camera(request):
 
         cap.release()
         cv2.destroyAllWindows()
+        camera_active = False
         return JsonResponse({"status": "camera closed"})
+    return JsonResponse({"status": "method not allowed"}, status=405)
+
+
+@csrf_exempt
+def stop_camera(request):
+    """
+    处理关闭摄像头的请求。
+    """
+    global camera_active
+    if request.method == 'POST':
+        if camera_active:
+            camera_active = False
+            return JsonResponse({"status": "stopping camera"})
+        else:
+            return JsonResponse({"status": "camera not running"}, status=400)
     return JsonResponse({"status": "method not allowed"}, status=405)

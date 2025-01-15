@@ -1,15 +1,26 @@
 <script setup>
 import Camera from './components/Camera.vue'
+import Upload from './components/Upload.vue'
 </script>
 
 <template>
   <div>
     <h1>动作识别系统</h1>
-    <Camera />
+    <div class="button-container">
+      <Camera />
+      <Upload />
+    </div>
   </div>
 </template>
 
 <style scoped>
+.button-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+}
 .logo {
   height: 6em;
   padding: 1.5em;
