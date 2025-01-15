@@ -18,20 +18,33 @@ class ActionHandler:
             return json.load(f)
 
     def process_frame(self, frame):
-        # 按优先级调用不同的识别器
+        #按优先级调用不同的识别器
         # action, coordinates = self.face_recognizer.recognize_frame(frame)
         # if action:
         #     return action, coordinates
-        #
-        # action, coordinates = self.hand_recognizer.recognize_frame(frame)
-        # if action:
-        #     return action, coordinates
+
+        action, coordinates = self.hand_recognizer.recognize_frame(frame)
+        if action:
+            print("收到了手势：", action, "坐标：", coordinates)
+            return action, coordinates
 
         action, coordinates = self.pose_recognizer.recognize_frame(frame)
         if action:
             return action, coordinates
 
         return None, None
+    # def process_frame(self, frame):
+    #
+    #     action, coordinates = self.hand_recognizer.recognize_frame(frame)
+    #     if action:
+    #         print("收到了手势：", action, "坐标：", coordinates)
+    #         return action, coordinates
+
+        # action, coordinates = self.pose_recognizer.recognize_frame(frame)
+        # if action:
+        #     return action, coordinates
+
+        # return None, None
 
     # def draw_sticker(self, frame, action, coordinates, scale=1.0, offset_y=0):
     #     """根据 action 和坐标绘制贴纸"""
