@@ -2,5 +2,6 @@
     "clap": "static/images/clap.png",
     "open_hands": "static/images/open_hands.png",
     "cover_face": "static/images/cover_face.png",
-    "biceps": "static/images/arm.png"
+    "biceps": "static/images/arm.png",
+    "firework": "static/images/firework.png"
 }
