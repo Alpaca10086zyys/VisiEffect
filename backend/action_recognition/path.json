@@ -18,5 +18,9 @@
     "666": "static/images/666.png",
     "ok": "static/images/ok.png",
     "pray": "static/images/pray.png",
-    "mowe": "static/images/mowe.png"
+    "mowe": "static/images/mowe.png",
+    "Wink": "static/images/wink.png",
+    "Grin": "static/images/grin.png",
+    "Mwah": "static/images/mwah.png",
+    "Hmph": "static/images/hmph.png"
 }

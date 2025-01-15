@@ -31,6 +31,9 @@ class ActionHandler:
         action, coordinates = self.pose_recognizer.recognize_frame(frame)
         if action:
             return action, coordinates
+        action, coordinates = self.face_recognizer.recognize_frame(frame)
+        if action:
+            return action, coordinates
 
         return None, None
     # def process_frame(self, frame):
