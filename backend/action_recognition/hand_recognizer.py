@@ -177,15 +177,22 @@ class HandRecognizer(ActionRecognizerBase):
         # 提取手部关键点
         if result.hand_landmarks:
             for hand in result.hand_landmarks:  # 遍历每只手
-                hand_landmarks = hand[0]  # 手部的第一个关键点，即结点 0
-                break  # 只处理第一只手
-            # print(f"(x,y)为: {hand_landmarks.x,hand_landmarks.y}")
+                hand_local = [(landmark.x, landmark.y) for landmark in hand]  # 提取每个关键点的 (x, y)
 
-        # 返回手势名称和结点 0 的位置 (x, y)
-        if detected_gesture:
-            return detected_gesture, (hand_landmarks.x, hand_landmarks.y)
-        # else:
-        #     return detected_gesture, None
+                # 计算手部包围框
+                xmin = min([point[0] for point in hand_local])
+                ymin = min([point[1] for point in hand_local])
+                xmax = max([point[0] for point in hand_local])
+                ymax = max([point[1] for point in hand_local])
+
+                width = (xmax - xmin)
+                height = (ymax - ymin)
+
+                break  # 只处理第一只手
+
+            # 返回手势名称和结点 0 的位置 (x, y)
+            if detected_gesture:
+                return detected_gesture, (xmin, ymin, width, height)
 
         # ============= 以下是向量部分===============
         frame = cv2.flip(image_rgb, 1)
@@ -286,7 +293,7 @@ class HandRecognizer(ActionRecognizerBase):
                 return "Mowe", (xmin, ymin, width, height)
 
             elif len(hands_local) == 2:  # 检测到两只手
-                # 以下为判断合十
+                # 以下为判断对手指
                 angle_list0 = hand_angle(hands_local[0])
                 angle_list1 = hand_angle(hands_local[1])
                 gesture_str0 = h_gesture(angle_list0)
@@ -300,14 +307,14 @@ class HandRecognizer(ActionRecognizerBase):
                 distance = math.sqrt((hand1_index_finger[0] - hand2_index_finger[0]) ** 2 +
                                      (hand1_index_finger[1] - hand2_index_finger[1]) ** 2)
 
-                # 判断是否合十，距离阈值根据实际场景调整
-                if distance < 50 and gesture_str0 == 'gun' and gesture_str1 == 'gun':  # 假设50像素以内为合十状态
+                # 判断委屈
+                if distance < 50 and gesture_str0 == 'gun' and gesture_str1 == 'gun':
                     # 计算双手的总包围框
-                    all_points = hands_local[0] + hands_local[1]
-                    xmin = min([point[0] for point in all_points])
-                    ymin = min([point[1] for point in all_points])
-                    xmax = max([point[0] for point in all_points])
-                    ymax = max([point[1] for point in all_points])
+                    points = hands_local[0]
+                    xmin = min([point[0] for point in points])
+                    ymin = min([point[1] for point in points])
+                    xmax = max([point[0] for point in points])
+                    ymax = max([point[1] for point in points])
                     width = xmax - xmin
                     height = ymax - ymin
                     # 获取图像的宽高
