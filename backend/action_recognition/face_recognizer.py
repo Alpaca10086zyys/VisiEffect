@@ -48,7 +48,7 @@ class FaceRecognizer(ActionRecognizerBase):
                     # print("嘴高/嘴宽：", lip_height / lip_width)
                     # print("右嘴点较左高度差：", right_lip.y - left_lip.y)
                     # 咧嘴笑
-                    if lip_height / lip_width > 0.15:
+                    if lip_height / lip_width > 0.14:
                         mouth = "open"
                     elif lip_height / lip_width > 0.05:
                         mouth = "dudu"

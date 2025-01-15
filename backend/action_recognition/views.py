@@ -30,7 +30,9 @@ def start_camera(request):
             # 每隔 20 帧处理一次识别
             if frame_count % 20 == 0:
                 action, coordinates = action_handler.process_frame(frame)
-                if action and len(coordinates) == 4:
+                if action is  None or coordinates is  None:
+                    continue
+                if action and len(coordinates)==4:
                     print(f"Action: {action}, Coordinates: {coordinates}")
                     for scale in range(5, 16):  # 缩放比例从 0.5 到 1.5
                         scale_factor = scale / 10.0
