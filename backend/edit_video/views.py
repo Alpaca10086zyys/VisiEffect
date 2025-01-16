@@ -1,5 +1,5 @@
 import cv2
-from django.http import JsonResponse
+from django.http import JsonResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
 import os
@@ -31,8 +31,20 @@ def upload_video(request):
             print("Video processing failed.")
             return JsonResponse({'error': 'Video processing failed'})
 
-        print(f"Processed video URL: {processed_video_url}")
-        return JsonResponse({'videoUrl': processed_video_url})
+        # print(f"Processed video URL: {processed_video_url}")
+        # return JsonResponse({'videoUrl': processed_video_url})
+
+        def file_iterator(file_name, chunk_size=1024):
+            with open(file_name, 'rb') as f:
+                while True:
+                    chunk = f.read(chunk_size)
+                    if not chunk:
+                        break
+                    yield chunk
+
+        response = StreamingHttpResponse(file_iterator(processed_video_url), content_type='multipart/form-data')
+        response['Content-Disposition'] = f'attachment; filename="{video.name}"'
+        return response
 
 # 视频处理函数
 def process_video(file_path):
@@ -128,6 +140,9 @@ def process_video(file_path):
 
     # 生成处理后视频的URL
     processed_video_url = f'http://localhost:8000/media/processed/{os.path.basename(processed_video_path)}'
-    return processed_video_url
+    # return processed_video_url
+    # print(f"processed_video_path: {processed_video_path}")
+
+    return processed_video_path
 
 

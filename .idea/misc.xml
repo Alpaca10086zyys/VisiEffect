@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Black">
-    <option name="sdkName" value="pythonProject1" />
+    <option name="sdkName" value="py311env" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.12 (python_Mediapipe)" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="py311env" project-jdk-type="Python SDK" />
 </project>

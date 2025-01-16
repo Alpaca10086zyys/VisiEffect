@@ -66,9 +66,36 @@
         }
     
         // 获取处理后的视频URL
-        const { videoUrl } = await response.json()
-        processedVideoUrl.value = videoUrl // 存储视频URL
-        showDownload.value = true // 显示下载弹窗
+        // const { videoUrl } = await response.json()
+        // processedVideoUrl.value = videoUrl // 存储视频URL
+        // showDownload.value = true // 显示下载弹窗
+
+
+        const contentDisposition = response.headers.get('content-disposition');
+        let filename = 'downloaded-video.mp4'; // 默认文件名
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename="?(.+?)"?;/);
+          if (filenameMatch.length > 1) {
+            filename = filenameMatch[1];
+          }
+        }
+
+        // 将响应体转换为Blob
+        const blob = await response.blob();
+
+        // 创建一个链接元素用于下载
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+
+        // 清理和释放URL对象
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+
       } catch (error) {
         console.error('上传出错:', error)
         alert('上传失败，请重试！')
